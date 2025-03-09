@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain.chains import LLMChain
 from langchain.prompts import SystemMessagePromptTemplate, HumanMessagePromptTemplate, ChatPromptTemplate
+from typing import Iterator
 
 # 載入環境變數
 load_dotenv()
@@ -234,41 +235,47 @@ class LLM_Model():
 
         return chain_analyze_name
 
-    # 進行推論
-    def infer_LLM(self,question:str):
-
+    def infer_LLM(self, question: str) -> Iterator[str]:
+        """
+        進行推論並以串流方式返回結果
+        Args:
+            question: 使用者的問題
+        Returns:
+            Iterator[str]: 串流形式的回答
+        """
         # 取得輸入主要股票代號
         stock_list = self.Name_Analyze_LLM.run({"name_reference": self.stock_clawer.data, "question": question}).split(",")
-        # 逐一取得股票資訊
+        
+        # 找不到股票代號的情況
         if stock_list == ["0_0"]:
-            response = "找不到股票代號"
-        else:
-            info_data = str()
-            res = str()
-            for stock_code in stock_list:
+            yield "找不到股票代號"
+            return
 
-                stock_code,stock_name = stock_code.split("_")
-                info_data = self.stock_clawer.get_information(Stock_code=stock_code)
-                res += self.LLM.run({"info_data": info_data, "question": "請你分析這些資訊，並逐條列點輸出重點資訊，減少冗餘資訊。"})
-                # 測試輸入
-            response = self.LLM.run({"info_data": res, "question": question})
-        return response
+        # 逐一取得股票資訊
+        info_data = str()
+        res = str()
+        for stock_code in stock_list:
+            stock_code, stock_name = stock_code.split("_")
+            info_data = self.stock_clawer.get_information(Stock_code=stock_code)
+            res += self.LLM.run({"info_data": info_data, "question": "請你分析這些資訊，並逐條列點輸出重點資訊，減少冗餘資訊。"})
+
+        # 使用串流方式生成最終回答
+        for chunk in self.LLM.stream({"info_data": res, "question": question}):
+            yield chunk
 
 
 # 修改 OPENAI_API_KEY 的設置
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 model = LLM_Model(OPENAI_API_KEY=OPENAI_API_KEY)
 
-# # 添加新的函數
-# def analyze_stock(query: str) -> str:
-#     """
-#     分析股票走勢
-#     """
-#     return model.infer_LLM(query)
-
-stock_input = input("請輸入股票代號或名稱: ")
-question = f"請分析{stock_input}的相關新聞、技術線型、交易資訊、法人進出，並判斷未來多空"
-
-result = model.infer_LLM(question)
-print(result)
+def analyze_stock(query: str) -> Iterator[str]:
+    """
+    分析股票走勢並以串流方式返回結果
+    Args:
+        query: 使用者的查詢
+    Returns:
+        Iterator[str]: 生成回答的串流
+    """
+    for chunk in model.infer_LLM(query):
+        yield chunk
 
