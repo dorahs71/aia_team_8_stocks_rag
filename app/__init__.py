@@ -1,6 +1,17 @@
 import gradio as gr
 from generation import generate_answer
 
+# 自定義超連結 CSS 樣式
+custom_css = """
+    .message-wrap a {
+        color: #2563eb !important;  /* 藍色連結 */
+        text-decoration: underline !important;
+    }
+    .message-wrap a:hover {
+        color: #1d4ed8 !important;  /* 滑鼠懸停時的深藍色 */
+    }
+"""
+
 def respond(message, history):
     """
     處理聊天訊息並返回回應
@@ -19,7 +30,8 @@ def create_app():
         theme="soft",
         examples=["台積電最近的交易資訊如何?", 
                 "請問台積電的類股資訊？",
-                "台積電赴美設廠對台股的影響？"]
+                "台積電赴美設廠對台股的影響？"],
+        css=custom_css
     )
     
     return chat_interface
