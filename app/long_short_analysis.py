@@ -11,6 +11,8 @@ from typing import Iterator
 # 載入環境變數
 load_dotenv()
 
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 ### 資料處理
 
 # 資料截取Class
@@ -180,11 +182,6 @@ class LLM_Model():
 
         # 設置prompt模板
         # 系統template
-        # system_message = SystemMessagePromptTemplate.from_template(
-        #     """你是一個專業的股市分析師，你會根據各種股市消息判斷市場走勢，像是即時新聞、法人買賣超、技術分析、交易資訊，
-        #         請解釋你因為哪些原因和新聞而判斷多空的可能，而且最後總會在「利空」和「利多」兩個選擇中給出一個明確的股市方向。
-        #         其中利空為股市下跌，利多為股市上漲。"""
-        # )
         system_message = SystemMessagePromptTemplate.from_template(
             """你是一個專業的股市分析師，你會根據各種股市消息結合來判斷市場走勢，像是即時新聞、法人買賣超、技術分析、交易資訊，
                 請解釋你因為哪些原因和新聞而判斷多空的可能，而且最後總會在「利空」和「利多」兩個選擇中給出一個明確的股市方向。
@@ -243,30 +240,34 @@ class LLM_Model():
         Returns:
             Iterator[str]: 串流形式的回答
         """
-        # 取得輸入主要股票代號
-        stock_list = self.Name_Analyze_LLM.run({"name_reference": self.stock_clawer.data, "question": question}).split(",")
-        
-        # 找不到股票代號的情況
-        if stock_list == ["0_0"]:
-            yield "找不到股票代號"
-            return
 
-        # 逐一取得股票資訊
-        info_data = str()
-        res = str()
-        for stock_code in stock_list:
-            stock_code, stock_name = stock_code.split("_")
-            info_data = self.stock_clawer.get_information(Stock_code=stock_code)
-            res += self.LLM.run({"info_data": info_data, "question": "請你分析這些資訊，並逐條列點輸出重點資訊，減少冗餘資訊。"})
+        try:
+            # 取得輸入主要股票代號
+            stock_list = self.Name_Analyze_LLM.run({
+                "name_reference": self.stock_clawer.data,
+                "question": question
+            }).split(",")
+            
+            # 找不到股票代號的情況
+            if stock_list == ["0_0"]:
+                yield "找不到股票代號"
+                return
 
-        # 使用串流方式生成最終回答
-        for chunk in self.LLM.stream({"info_data": res, "question": question}):
-            yield chunk
+            # # 逐一取得股票資訊並直接使用串流輸出
+            for stock in stock_list:
+                stock_code, stock_name = stock.split("_")
+                # 取得股票資訊
+                info_data = self.stock_clawer.get_information(Stock_code=stock_code)
 
+                # 使用串流方式生成回答
+                for chunk in self.LLM.stream({
+                    "info_data": info_data,
+                    "question": "請你分析這些資訊，並逐條列點輸出重點資訊，減少冗餘資訊。"
+                }):
+                    yield chunk['text']
 
-# 修改 OPENAI_API_KEY 的設置
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-model = LLM_Model(OPENAI_API_KEY=OPENAI_API_KEY)
+        except Exception as e:
+            yield( f"發生錯誤: {str(e)}")
 
 def analyze_stock(query: str) -> Iterator[str]:
     """
@@ -276,6 +277,7 @@ def analyze_stock(query: str) -> Iterator[str]:
     Returns:
         Iterator[str]: 生成回答的串流
     """
+    model = LLM_Model(OPENAI_API_KEY = OPENAI_API_KEY)
     for chunk in model.infer_LLM(query):
         yield chunk
 
