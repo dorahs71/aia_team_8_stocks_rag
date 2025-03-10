@@ -19,47 +19,45 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 TEJ_API_KEY = os.getenv("TEJ_API_KEY")
 
+def set_basic_data():
+    # TEJ API 設定
+    tejapi.ApiConfig.api_key = TEJ_API_KEY
 
-# TEJ API 設定
-tejapi.ApiConfig.api_key = TEJ_API_KEY
+    # 取得 TEJ 資料
+    data_chinese = tejapi.get('TRAIL/AIND', chinese_column_name=True)
+    data_chinese_copy = data_chinese.copy()
 
-# 取得 TEJ 資料
-data_chinese = tejapi.get('TRAIL/AIND', chinese_column_name=True)
-data_chinese_copy = data_chinese.copy()
+    # 處理日期格式
+    for col in data_chinese_copy.columns:
+        if pd.api.types.is_datetime64_any_dtype(data_chinese_copy[col]):
+            try:
+                data_chinese_copy[col] = data_chinese_copy[col].dt.strftime('%Y-%m-%d')
+            except AttributeError:
+                print(f"Column '{col}' is not a datetime object.")
 
-# 處理日期格式
-for col in data_chinese_copy.columns:
-    if pd.api.types.is_datetime64_any_dtype(data_chinese_copy[col]):
-        try:
-            data_chinese_copy[col] = data_chinese_copy[col].dt.strftime('%Y-%m-%d')
-        except AttributeError:
-            print(f"Column '{col}' is not a datetime object.")
+    # 欄位名稱調整
+    for col in data_chinese_copy.columns:
+        # Check if the column name appears more than once
+        if data_chinese_copy.columns.tolist().count(col) > 1:
+            # Get the indices of the duplicate columns
+            duplicate_indices = [i for i, c in enumerate(data_chinese_copy.columns) if c == col]
+            # Rename the duplicate columns, but keep the first occurrence as is
+            for i, index in enumerate(duplicate_indices):
+                if i == 0:
+                    new_col_name = f"{col}"
+                else:
+                    new_col_name = f"{col}_{i}"
+                    data_chinese_copy.columns.values[index] = new_col_name
 
-# 欄位名稱調整
-for col in data_chinese_copy.columns:
-    # Check if the column name appears more than once
-    if data_chinese_copy.columns.tolist().count(col) > 1:
-        # Get the indices of the duplicate columns
-        duplicate_indices = [i for i, c in enumerate(data_chinese_copy.columns) if c == col]
-        # Rename the duplicate columns, but keep the first occurrence as is
-        for i, index in enumerate(duplicate_indices):
-            if i == 0:
-                new_col_name = f"{col}"
-            else:
-                new_col_name = f"{col}_{i}"
-                data_chinese_copy.columns.values[index] = new_col_name
-
-# 選擇需要的欄位
-data_used = data_chinese_copy[['證期會代碼', '公司中文全稱', '公司中文簡稱', 'TSE新產業_代碼', 'TSE新產業_名稱', '董事長', '實收資本額(元)','危機事件大類別說明']].copy()
+    # 選擇需要的欄位
+    data_used = data_chinese_copy[['證期會代碼', '公司中文全稱', '公司中文簡稱', 'TSE新產業_代碼', 'TSE新產業_名稱', '董事長', '實收資本額(元)','危機事件大類別說明']].copy()
 
 
 
-# 轉換成 JSON
-data_used.to_json('data_used.json', orient='records')
+    # 轉換成 JSON
+    data_used.to_json('data_used.json', orient='records')
 
 # 類股API
-
-
 sector_mapping = {
     "水泥工業": "1",
     "食品工業": "2",
@@ -294,8 +292,7 @@ def process_stock_query(query):
         return "找不到相關股票資訊"
 
 ### 測試基本的股票資訊查詢功能
-
-stock_input = input("請輸入股票代號或名稱: ")
-query =  f"{stock_input}"
-response = process_stock_query(query)
-print(response)
+# stock_input = input("請輸入股票代號或名稱: ")
+# query =  f"{stock_input}"
+# response = process_stock_query(query)
+# print(response)
