@@ -290,9 +290,3 @@ def process_stock_query(query):
         return response
     else:
         return "找不到相關股票資訊"
-
-### 測試基本的股票資訊查詢功能
-# stock_input = input("請輸入股票代號或名稱: ")
-# query =  f"{stock_input}"
-# response = process_stock_query(query)
-# print(response)
