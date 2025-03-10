@@ -2,6 +2,7 @@ from typing import Protocol, Set, List, Iterator
 from dataclasses import dataclass
 from expert_video_analysis import generate_answer
 from long_short_analysis import analyze_stock
+from basic_stock_analysis import process_stock_query
 
 class Agent(Protocol):
     """Agent 介面"""
@@ -39,15 +40,28 @@ class ExpertVideoAnalysisAgent:
     def process(self, query: str) -> Iterator[str]:
         print('我是 ExpertVideoAnalysis')
         return generate_answer(query)
+@dataclass 
+class BasicStockAnalysisAgent:
+    """專家分析代理"""
+    _keywords: Set[str] = frozenset({'類股'})
+
+    @property
+    def keywords(self) -> Set[str]:
+        return self._keywords
+
+    def process(self, query: str) -> Iterator[str]:
+        print('我是 BasicStockAnalysis')
+        return process_stock_query(query)
 
 class AgentOrchestrator:
     """代理編排器"""
     def __init__(self):
         self.agents: List[Agent] = [
             LongShortAnalysisAgent(),
-            ExpertVideoAnalysisAgent()
+            ExpertVideoAnalysisAgent(),
+            BasicStockAnalysisAgent()
         ]
-        self.default_agent = ExpertVideoAnalysisAgent()
+        self.default_agent = BasicStockAnalysisAgent()
 
     def get_agent(self, query: str) -> Agent:
         """根據查詢選擇合適的代理"""
