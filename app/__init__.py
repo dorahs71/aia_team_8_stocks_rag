@@ -1,5 +1,5 @@
 import gradio as gr
-from generation import generate_answer
+from agent_orchestrator import AgentOrchestrator
 
 # 自定義超連結 CSS 樣式
 custom_css = """
@@ -12,25 +12,30 @@ custom_css = """
     }
 """
 
+# 初始化代理編排器
+orchestrator = AgentOrchestrator()
+
 def respond(message, history):
     """
     處理聊天訊息並返回回應
     """
-    response = ""
-    for chunk in generate_answer(message):
-        response += chunk
-        yield response
+    full_response = ""
+    for chunk in orchestrator.process_query(message):
+        full_response += chunk
+        yield full_response
 
 # 創建 Gradio 聊天界面
 def create_app():
     chat_interface = gr.ChatInterface(
         respond,
-        title="股票趨勢分析AI",
-        description="請輸入您想詢問的股票趨勢、融資融券的相關問題，我將以專業的方式回答。",
+        title="智能財經分析助手",
+        description="請輸入您想詢問的問題：\n1. 股票走勢分析（例如：請分析台積電的多空走勢）\n2. 專家觀點分析（例如：專家對近期市場有什麼看法）",
         theme="soft",
-        examples=["台積電最近的交易資訊如何?", 
-                "請問台積電的類股資訊？",
-                "台積電赴美設廠對台股的影響？"],
+        examples=[
+            "請分析台積電的多空走勢",
+            "請問台積電的類股資訊？",
+            "專家對台積電赴美設廠有什麼看法？"
+        ],
         css=custom_css
     )
     
