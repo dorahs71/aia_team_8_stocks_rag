@@ -19,10 +19,14 @@ def respond(message, history):
     """
     處理聊天訊息並返回回應
     """
-    full_response = ""
-    for chunk in orchestrator.process_query(message):
-        full_response += chunk
-        yield full_response
+    response = orchestrator.process_query(message)
+    if response.type == "generator":
+        full_response = ""
+        for chunk in response.content:
+            full_response += chunk
+            yield full_response
+    elif response.type == "string":
+        yield response.content
 
 # 創建 Gradio 聊天界面
 def create_app():

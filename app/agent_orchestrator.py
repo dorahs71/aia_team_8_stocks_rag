@@ -1,8 +1,13 @@
-from typing import Protocol, Set, List, Iterator
+from typing import Protocol, Set, List, Iterator, Union
 from dataclasses import dataclass
 from expert_video_analysis import generate_answer
 from long_short_analysis import analyze_stock
 from basic_stock_analysis import process_stock_query
+
+class Response:
+    def __init__(self, type: str, content: Union[str, Iterator[str]]):
+        self.type = type
+        self.content = content
 
 class Agent(Protocol):
     """Agent 介面"""
@@ -11,7 +16,7 @@ class Agent(Protocol):
         """代理關鍵字"""
         ...
 
-    def process(self, query: str) -> Iterator[str]:
+    def process(self, query: str) -> Response:
         """處理查詢"""
         ...
 
@@ -46,10 +51,10 @@ class BasicStockAnalysisAgent:
     _keywords: Set[str] = frozenset({'類股'})
 
     @property
-    def keywords(self) -> Set[str]:
+    def keywords(self) -> str:
         return self._keywords
 
-    def process(self, query: str) -> Iterator[str]:
+    def process(self, query: str) -> str:
         print('我是 BasicStockAnalysis')
         return process_stock_query(query)
 
@@ -70,10 +75,20 @@ class AgentOrchestrator:
                 return agent
         return self.default_agent
 
-    def process_query(self, query: str) -> Iterator[str]:
+    def process_query(self, query: str) -> Response:
         """處理查詢並返回結果"""
+        # try:
+        #     agent = self.get_agent(query)
+        #     yield from agent.process(query)  # 使用 yield from 直接傳遞生成器
+        # except Exception as e:
+        #     yield f"抱歉，處理您的請求時發生錯誤：{str(e)}" 
+        
         try:
             agent = self.get_agent(query)
-            yield from agent.process(query)  # 使用 yield from 直接傳遞生成器
+            response = agent.process(query)
+            if isinstance(response, str):  # 檢查是否為純字串
+                return Response("string", agent.process(query))
+            else:
+                return Response("generator", agent.process(query))
         except Exception as e:
-            yield f"抱歉，處理您的請求時發生錯誤：{str(e)}" 
+            return Response("string", f"抱歉，處理您的請求時發生錯誤：{str(e)}")
