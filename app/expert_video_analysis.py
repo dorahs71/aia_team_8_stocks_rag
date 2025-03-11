@@ -3,7 +3,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
-from vector_store import get_retriever
+from video_data_handling import get_retriever
 from typing import Iterator
 
 # Constants

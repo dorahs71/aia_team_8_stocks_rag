@@ -18,7 +18,8 @@ dependencies = [
     "tejapi (>=0.1.31,<0.2.0)",
     "langchain-google (>=0.1.1,<0.2.0)",
     "matplotlib (>=3.10.1,<4.0.0)",
-    "seaborn (>=0.13.2,<0.14.0)"
+    "seaborn (>=0.13.2,<0.14.0)",
+    "yt-dlp (>=2025.2.19,<2026.0.0)"
 ]
 
 [build-system]
