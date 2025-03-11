@@ -1,12 +1,13 @@
-# Finance Advisor RAG
 ---
-title: Aia Team 8 Stocks Rag
-emoji: 🏢
-colorFrom: yellow
-colorTo: pink
+license: mit
+title: Financial Advisor RAG
 sdk: gradio
+emoji: 🚀
+colorFrom: blue
+colorTo: blue
+pinned: false
 sdk_version: 5.20.1
 app_file: app/__init__.py
-pinned: false
-license: mit
+python_version: 3.12.0
+short_description: A financial advisor RAG, only for experimental us
 ---
