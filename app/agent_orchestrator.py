@@ -50,7 +50,7 @@ class ExpertVideoAnalysisAgent:
 @dataclass 
 class BasicStockAnalysisAgent:
     """專家分析代理"""
-    _keywords: Set[str] = frozenset({'類股'})
+    _keywords: Set[str] = frozenset({'無'})
 
     @property
     def keywords(self) -> str:
