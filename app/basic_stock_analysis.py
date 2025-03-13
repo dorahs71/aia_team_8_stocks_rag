@@ -240,7 +240,7 @@ def create_stock_visualization(stocks):
 def process_stock_query(query):
     """處理股票查詢並提供 AI 分析"""
     # 讀取股票資料
-    with open('data_used.json', 'r') as f:
+    with open('data/data_used.json', 'r') as f:
         stock_data = json.load(f)
 
     # 建立查詢索引
