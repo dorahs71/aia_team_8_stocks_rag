@@ -8,7 +8,7 @@ from typing import Iterator
 
 # Constants
 TEMPERATURE = 0.5
-LLM_MODEL = 'gpt-4o-mini'
+LLM_MODEL = 'gpt-4o'
 
 def generate_answer(query: str) -> Iterator[str]:
     """
