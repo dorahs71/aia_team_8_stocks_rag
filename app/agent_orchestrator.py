@@ -4,6 +4,7 @@ from expert_video_analysis import generate_answer
 from long_short_analysis import analyze_stock
 from basic_stock_analysis import process_stock_query
 from institutional_trading_analysis import response_data
+from morris_chang_analysis import response_morris_data
 
 class Response:
     def __init__(self, type: str, content: Union[str, Iterator[str]]):
@@ -72,6 +73,20 @@ class InstitutionalTradingAnalysisAgent:
         print('我是 InstitutionalTradingAnalysisAgent')
         return response_data(query)
 
+@dataclass 
+class MorrisChangAnalysisAgent:
+    """專家分析代理"""
+    _keywords: Set[str] = frozenset({'張忠謀'})
+
+    @property
+    def keywords(self) -> str:
+        return self._keywords
+
+    def process(self, query: str) -> str:
+        print('我是 MorrisChangAnalysisAgent')
+        return response_morris_data(query)
+
+
 class AgentOrchestrator:
     """代理編排器"""
     def __init__(self):
@@ -79,7 +94,8 @@ class AgentOrchestrator:
             LongShortAnalysisAgent(),
             ExpertVideoAnalysisAgent(),
             BasicStockAnalysisAgent(),
-            InstitutionalTradingAnalysisAgent()
+            InstitutionalTradingAnalysisAgent(),
+            MorrisChangAnalysisAgent()
         ]
         self.default_agent = BasicStockAnalysisAgent()
 
